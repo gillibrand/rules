@@ -32,11 +32,18 @@ function RuleGroup({ group, parentGroup }: Props) {
   }
 
   function onAddGroup() {
+    const initialRule = {
+      type: 'rule' as const,
+      name: 'attribute name',
+      operator: EqualOperator,
+      value: 'new value ' + generateGuid(),
+      id: generateGuid(),
+    };
     controller.addNewRule(
       {
         type: 'group',
         groupOperator: 'AND',
-        rules: [],
+        rules: [initialRule],
         id: generateGuid(),
       },
       group
@@ -172,7 +179,7 @@ function RuleGroup({ group, parentGroup }: Props) {
     return ruleGroupEl;
   } else {
     return (
-      <div className="AnyRuleWrapper" ref={ref}>
+      <div className="AnyRuleWrapper" ref={ref} data-id={group.id}>
         {ruleGroupEl}
       </div>
     );

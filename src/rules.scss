@@ -65,6 +65,9 @@
   // Normally the vertical guidelines goes all the way down to meet the next rule, but if it's the
   // last, end it early next to the controls.
   &:last-child {
+    &::after {
+      display: inline;
+    }
     &::before {
       height: 1.5rem;
     }
@@ -76,6 +79,10 @@
     // height: 3px;
     // background-color: black;
   }
+}
+
+.RuleGroup__controls {
+  padding-inline-start: 6rem !important;
 }
 
 .hoverButton {

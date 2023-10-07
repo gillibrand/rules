@@ -47,7 +47,7 @@ function Rule({ rule, parentGroup }: Props) {
   //  Wrapper div is to animate without concern for padding. Inner Rule is the real thing with
   //  padding.
   return (
-    <div ref={ref} className="AnyRuleWrapper">
+    <div ref={ref} className="AnyRuleWrapper" data-id={rule.id}>
       <div className="Rule">
         <DragHandle className="negative1EndMargin" />
 
