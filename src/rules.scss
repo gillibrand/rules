@@ -1,0 +1,222 @@
+.RuleGroup {
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f4f4;
+  // background-color: rgba(0, 0, 0, 0.1);
+  // padding: 0.5rem;
+}
+
+.RuleGroup__header {
+  display: flex;
+  gap: 1rem;
+  // justify-content: space-between;
+  // background-color: #cccccc;
+}
+
+// .RuleGroup .RuleGroup .RuleGroup__header {
+//   padding-inline-start: 2rem;
+// }
+
+.Rule,
+// .RuleGroup,
+.RuleGroup__header,
+.RuleGroup__controls,
+.RuleGroup__emptyMessage {
+  // padding: 0.25rem 000 0.25rem;
+  padding-top: 0.5rem;
+}
+
+// These create the blue guidelines. Top group does NOT have one next to it.
+.AnyRuleWrapper,
+.RuleGroup__controls,
+.RuleGroup__emptyMessage {
+  // Blue guidelines are abs positioned under these.
+  position: relative;
+  // extra space for guidelines
+  // padding: 0.5rem 0.25rem 0 0.25rem;
+  padding-inline-start: 4rem;
+
+  &::before,
+  &:after {
+    content: '';
+    position: absolute;
+    background-color: #0043ce;
+  }
+
+  // vertical
+  &::before {
+    width: 2px;
+    height: 100%;
+    left: 3rem;
+    top: 0;
+    z-index: 1;
+  }
+
+  // horizontal
+  &::after {
+    top: 1.5rem;
+    left: 3rem;
+    width: 1rem;
+    width: 1rem;
+    height: 2px;
+  }
+
+  // Normally the vertical guidelines goes all the way down to meet the next rule, but if it's the
+  // last, end it early next to the controls.
+  &:last-child {
+    &::before {
+      height: 1.5rem;
+    }
+  }
+}
+
+.RuleGroup > .RuleGroup {
+  &::after {
+    // height: 3px;
+    // background-color: black;
+  }
+}
+
+.hoverButton {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding: 0;
+  visibility: hidden;
+
+  &:hover {
+    visibility: visible;
+    background-color: #eee;
+  }
+
+  .Rule:hover &,
+  .sRuleGroup:hover & {
+    visibility: visible;
+  }
+}
+
+select,
+input[type='text'],
+.Select {
+  background-color: white;
+  border: solid 1px transparent;
+  border-bottom-color: rgb(141, 141, 141);
+  padding: 0.5rem;
+
+  min-width: 15rem;
+}
+
+.icon {
+  height: 16px;
+  width: 16px;
+  background-size: 16px;
+  display: inline-block;
+}
+
+.dragIcon {
+  @extend .icon;
+  background-image: url(images/draggable.svg);
+}
+
+.addIcon {
+  @extend .icon;
+  background-image: url(images/add.svg);
+}
+
+.addGroupIcon {
+  @extend .icon;
+  background-image: url(images/tree-view.svg);
+}
+
+.removeIcon {
+  @extend .icon;
+  background-image: url(images/subtract.svg);
+  // background-image: url(images/delete.svg);
+}
+
+.iconButton {
+  height: 32px;
+  width: 32px;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ddd;
+  }
+}
+
+.DragHandle {
+  height: 32px;
+  width: 32px;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  cursor: grab;
+}
+
+// Used to remove grid "gap" f
+.negative1EndMargin {
+  margin-inline-end: -1rem;
+}
+
+.ghostButton {
+  padding: 0.5rem;
+  // border: solid 1px gray;
+  border: none;
+  background-color: transparent;
+  color: #0f62fe;
+  cursor: pointer;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &:active {
+    color: #0043ce;
+  }
+
+  &:hover {
+    background-color: #f1f1f1;
+    background-color: darken(#f1f1f1, 7%);
+  }
+}
+
+.Rule,
+.RuleGroup__controls,
+.RuleGroup__emptyMessage {
+  display: flex;
+  gap: 1em;
+}
+
+.RuleGroup__controls {
+  gap: 0.5rem;
+}
+
+.RuleGroup__emptyMessage {
+  color: gray;
+  padding-inline-start: 5.5rem;
+  min-height: 33px;
+
+  // No horizontal line to empty groups rows. It looks cleaner w/o and and is more obviously empty
+  &:after {
+    display: none;
+  }
+}
+
+.RuleGroup__controls {
+  padding-inline-start: 5rem;
+}
+
+.RuleGroup--isRoot {
+  // rules and group have top padding to separate them, but nothing on the outer sides and bottom
+  padding: 0 0.5rem 0.5rem 0.5rem;
+}
