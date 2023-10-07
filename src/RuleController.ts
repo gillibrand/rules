@@ -1,5 +1,5 @@
-import { createContext } from "react";
-import { AnyRuleData, GroupOperator, RuleGroupData } from "./types";
+import { createContext } from 'react';
+import { AnyRuleData, GroupOperator, RuleGroupData } from './types';
 
 interface RuleContextType {
   controller: RuleController;
@@ -20,6 +20,12 @@ interface RuleController {
    * that render.
    */
   getNewRuleId(): string | undefined;
+
+  canUndo(): boolean;
+  canRedo(): boolean;
+
+  undo(): void;
+  redo(): void;
 }
 
 export type { RuleController };

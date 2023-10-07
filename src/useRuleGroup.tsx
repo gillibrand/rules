@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
-import { RuleContext, RuleController } from "./RuleController";
-import { RuleGroup } from "./RuleGroup";
-import { RuleGroupData } from "./types";
+import { useRef, useState } from 'react';
+import { RuleContext, RuleController } from './RuleController';
+import { RuleGroup } from './RuleGroup';
+import { RuleGroupData } from './types';
 
 interface Cloned {
   root: RuleGroupData;
@@ -15,6 +15,7 @@ function cloneGroup(root: RuleGroupData, target: RuleGroupData): Cloned | null {
     if (target.id === current.id) {
       newTarget = {
         ...target,
+        rules: [...target.rules],
       };
 
       return newTarget;
@@ -25,7 +26,7 @@ function cloneGroup(root: RuleGroupData, target: RuleGroupData): Cloned | null {
 
     for (let i = 0; i < newRules.length; i++) {
       const child = newRules[i];
-      if (child.type !== "group") continue;
+      if (child.type !== 'group') continue;
 
       const newChildGroup = recurse(child);
       if (newChildGroup) {
@@ -60,11 +61,45 @@ interface Result {
 }
 
 function useRuleGroup({ initialGroup }: Props): Result {
-  const [rootGroup, setRootGroup] = useState(initialGroup);
+  const [rootGroup, _setRootGroup] = useState(initialGroup);
+  const [undoState, setUndoState] = useState<RuleGroupData | undefined>();
+  const [redoState, setRedoState] = useState<RuleGroupData | undefined>();
+
+  function setRootGroup(newRootGroup: RuleGroupData) {
+    console.info('>>> undo1', undoState, rootGroup, redoState);
+    setUndoState(rootGroup);
+    _setRootGroup(newRootGroup);
+    setRedoState(undefined);
+    setTimeout(() => {
+      console.info('>>> undo2', rootGroup, newRootGroup, undefined);
+    }, 100);
+  }
 
   const newRuleIdRef = useRef<string | undefined>();
 
   const controller: RuleController = {
+    canRedo() {
+      return !!redoState;
+    },
+
+    canUndo() {
+      return !!undoState;
+    },
+
+    undo() {
+      if (!undoState) return;
+      setRedoState(rootGroup);
+      _setRootGroup(undoState);
+      setUndoState(undefined);
+    },
+
+    redo() {
+      if (!redoState) return;
+      setUndoState(rootGroup);
+      _setRootGroup(redoState);
+      setRedoState(undefined);
+    },
+
     getNewRuleId() {
       return newRuleIdRef.current;
     },
@@ -85,7 +120,9 @@ function useRuleGroup({ initialGroup }: Props): Result {
       const cloned = cloneGroup(rootGroup, toGroup);
       if (!cloned) return;
 
-      if (rule.type === "group") {
+      console.info('>>> clone', cloned.root === rootGroup);
+
+      if (rule.type === 'group') {
         cloned.target.rules.push(rule);
         setRootGroup(cloned.root);
         return;
@@ -93,7 +130,7 @@ function useRuleGroup({ initialGroup }: Props): Result {
 
       // is a rule
       const firstGroupIndex = cloned.target.rules.findIndex((cond) => {
-        if (cond.type == "group") return true;
+        if (cond.type == 'group') return true;
       });
 
       if (firstGroupIndex === -1) {

@@ -24,6 +24,7 @@
 .RuleGroup__emptyMessage {
   // padding: 0.25rem 000 0.25rem;
   padding-top: 0.5rem;
+  // font-size: 0.8rem;
 }
 
 // These create the blue guidelines. Top group does NOT have one next to it.
@@ -103,6 +104,8 @@
 select,
 input[type='text'],
 .Select {
+  appearance: none;
+  border-radius: 0;
   background-color: white;
   border: solid 1px transparent;
   border-bottom-color: rgb(141, 141, 141);
@@ -174,17 +177,21 @@ input[type='text'],
   border: none;
   background-color: transparent;
   color: #0f62fe;
-  cursor: pointer;
   vertical-align: middle;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
 
+  &:disabled {
+    color: gray;
+  }
+
   &:active {
     color: #0043ce;
   }
 
-  &:hover {
+  &:not(:disabled):hover {
+    cursor: pointer;
     background-color: #f1f1f1;
     background-color: darken(#f1f1f1, 7%);
   }
@@ -219,4 +226,5 @@ input[type='text'],
 .RuleGroup--isRoot {
   // rules and group have top padding to separate them, but nothing on the outer sides and bottom
   padding: 0 0.5rem 0.5rem 0.5rem;
+  overflow: auto;
 }

@@ -43,6 +43,14 @@ function RuleGroup({ group, parentGroup }: Props) {
     );
   }
 
+  function onUndo() {
+    controller.undo();
+  }
+
+  function onRedo() {
+    controller.redo();
+  }
+
   const collapsedHeightPx = parentGroup?.rules.length == 1 ? 41 : undefined;
 
   function onRemoveGroup() {
@@ -64,10 +72,44 @@ function RuleGroup({ group, parentGroup }: Props) {
   const shouldAnimateIn = controller.getNewRuleId() === group.id;
   useAnimateIn(shouldAnimateIn, ref, collapsedHeightPx);
 
+  function renderHeaderButtons(isRoot: boolean) {
+    if (isRoot) {
+      return (
+        <>
+          <button
+            className="ghostButton"
+            onClick={onUndo}
+            disabled={!controller.canUndo()}
+          >
+            Undo
+          </button>
+
+          <button
+            className="ghostButton"
+            onClick={onRedo}
+            disabled={!controller.canRedo()}
+          >
+            Redo
+          </button>
+        </>
+      );
+    } else {
+      return (
+        <button
+          className="iconButton"
+          onClick={onRemoveGroup}
+          title="Delete rule group"
+        >
+          <i className="removeIcon" />
+        </button>
+      );
+    }
+  }
+
   // We might have a root, unwrapped RuleGroup. It has no guideline next to it and doesn't need to
   // animate. Nested RuleGroups need to be an an AnyRuleWrapper animation wrapper that also adds
   // guidelines.
-  const ruleGroup = (
+  const ruleGroupEl = (
     <div className={cx('RuleGroup', { 'RuleGroup--isRoot': !parentGroup })}>
       {/* Header with AND/OR select*/}
       <div className="RuleGroup__header">
@@ -84,13 +126,7 @@ function RuleGroup({ group, parentGroup }: Props) {
           </select>
         </div>
 
-        <button
-          className="iconButton"
-          onClick={onRemoveGroup}
-          title="Delete rule group"
-        >
-          <i className="removeIcon" />
-        </button>
+        {renderHeaderButtons(!parentGroup)}
       </div>
 
       {/* Rules in this group (can be subgroups) */}
@@ -133,11 +169,11 @@ function RuleGroup({ group, parentGroup }: Props) {
   );
 
   if (!parentGroup) {
-    return ruleGroup;
+    return ruleGroupEl;
   } else {
     return (
       <div className="AnyRuleWrapper" ref={ref}>
-        {ruleGroup}
+        {ruleGroupEl}
       </div>
     );
   }
