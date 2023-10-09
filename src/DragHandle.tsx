@@ -1,15 +1,12 @@
 import cx from 'classnames';
-import { startPossibleDrag } from './dragManager';
 interface Props {
   className?: string;
+  onMouseDown: (e: React.MouseEvent<HTMLElement>) => void;
 }
 
-function DragHandle({ className }: Props) {
+function DragHandle({ className, onMouseDown }: Props) {
   return (
-    <div
-      className={cx('DragHandle', className)}
-      onMouseDown={startPossibleDrag}
-    >
+    <div className={cx('DragHandle', className)} onMouseDown={onMouseDown}>
       <div className="dragIcon" />
     </div>
   );

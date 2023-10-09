@@ -17,14 +17,14 @@
 
 .Rule,
 .RuleGroup__header,
-.RuleGroup__controls,
+.RuleGroup__footer,
 .RuleGroup__emptyMessage {
   padding-top: 0.5rem;
 }
 
 // These create the blue guidelines. Top group does NOT have one next to it.
 .AnyRuleWrapper,
-.RuleGroup__controls,
+.RuleGroup__footer,
 .RuleGroup__emptyMessage {
   // Blue guidelines are abs positioned under these.
   position: relative;
@@ -60,33 +60,19 @@
 
   // Normally the vertical guidelines goes all the way down to meet the next rule, but if it's the
   // last, end it early next to the controls.
-  &:last-child {
-    &::after {
-      display: inline;
-    }
-    &::before {
-      height: 1.5rem;
-    }
-  }
 
   .RuleGroup.RuleGroup--isAddHover > & {
     &::before,
     &::after {
-      // background-color: red !important;
-      // box-shadow: 0 0 10px #0043ce;
-      // background-color: #0f62fe;
-
       box-shadow: 0 0 10px #0f62fe;
-      // box-shadow: 0 0 10px #666;
-      // background-color: #0f62fe;
-      // width: 4px;
-      // box-shadow: -2px 0 0 1px #0043ce;
     }
   }
 }
 
-.RuleGroup__controls {
-  // padding-inline-start: 6rem !important;
+.RuleGroup__footer {
+  &::before {
+    height: 1.5rem;
+  }
 }
 
 .hoverButton {
@@ -209,7 +195,7 @@ input[type='text'],
 }
 
 .Rule,
-.RuleGroup__controls,
+.RuleGroup__footer,
 .RuleGroup__emptyMessage {
   display: flex;
   gap: 1em;
@@ -229,8 +215,42 @@ input[type='text'],
   }
 }
 
-.RuleGroup__controls {
+.RuleGroup__footer {
   gap: 0.5rem;
   padding-inline-start: 4.25rem;
   // padding-inline-start: 6rem;
+}
+
+.Dropbar {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+
+  background-color: red;
+  height: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dropPlaceholder {
+  min-height: 37px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: dashed 2px #0f62fe;
+  border: dashed 2px #0043ce;
+  border-inline-start-style: solid;
+  // outline-offset: 5px;
+  // border-radius: 10px;
+  margin-inline-start: 3rem;
+  z-index: 1;
+  position: relative;
+}
+
+.ruleDragAvatar {
+  position: absolute;
+  z-index: 100;
+  background-color: #eee;
+  padding-bottom: 0.5rem;
+
+  box-shadow: 3px 3px 15px gray;
 }

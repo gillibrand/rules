@@ -1,27 +1,26 @@
 // import "./App.css";
-import { useEffect } from "react";
-import { generateGuid } from "./guid";
-import { RuleGroupData, EqualOperator } from "./types";
-import { useRuleGroup } from "./useRuleGroup";
-import { DragHandle } from "./DragHandle";
+import { useEffect } from 'react';
+import { generateGuid } from './guid';
+import { EqualOperator, RuleGroupData } from './types';
+import { useRuleGroup } from './useRuleGroup';
 
 const initialRoot: RuleGroupData = {
-  type: "group",
-  groupOperator: "OR",
+  type: 'group',
+  groupOperator: 'OR',
   id: generateGuid(),
   rules: [
     {
-      type: "rule",
-      name: "Title",
+      type: 'rule',
+      name: 'Title',
       operator: EqualOperator,
-      value: "Casey",
+      value: 'Casey',
       id: generateGuid(),
     },
     {
-      type: "rule",
-      name: "Title",
+      type: 'rule',
+      name: 'Title',
       operator: EqualOperator,
-      value: "Sidney",
+      value: 'Sidney',
       id: generateGuid(),
     },
   ],
@@ -32,9 +31,7 @@ function App() {
     initialGroup: initialRoot,
   });
 
-  useEffect(() => {
-    console.info(">>> Rules changed", data);
-  }, [data]);
+  useEffect(() => {}, [data]);
 
   return <>{ruleGroup}</>;
 }

@@ -13,6 +13,7 @@ interface RuleController {
   addNewRule(rule: AnyRuleData, toGroup: RuleGroupData): void;
   removeRule(rule: AnyRuleData, fromGroup: RuleGroupData): void;
   setGroupOperator(group: RuleGroupData, op: GroupOperator): void;
+  moveRule(rule: AnyRuleData, fromGroupId: string, toGroupId: string): void;
 
   /**
    * Immediately after a new rule, this will return the ID of that rule. This is used to find and

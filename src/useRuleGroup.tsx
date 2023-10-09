@@ -1,14 +1,17 @@
 import { useRef, useState } from 'react';
 import { RuleContext, RuleController } from './RuleController';
 import { RuleGroup } from './RuleGroup';
-import { RuleGroupData } from './types';
+import { AnyRuleData, RuleGroupData } from './types';
 
 interface Cloned {
   root: RuleGroupData;
   target: RuleGroupData;
 }
 
-function cloneGroup(root: RuleGroupData, target: RuleGroupData): Cloned | null {
+function cloneOneGroup(
+  root: RuleGroupData,
+  target: RuleGroupData
+): Cloned | null {
   let newTarget: RuleGroupData | null = null;
 
   function recurse(current: RuleGroupData): null | RuleGroupData {
@@ -21,7 +24,6 @@ function cloneGroup(root: RuleGroupData, target: RuleGroupData): Cloned | null {
       return newTarget;
     }
 
-    // let foundIt = false;
     const newRules = [...current.rules];
 
     for (let i = 0; i < newRules.length; i++) {
@@ -51,6 +53,49 @@ function cloneGroup(root: RuleGroupData, target: RuleGroupData): Cloned | null {
       };
 }
 
+interface ClonedGroups {
+  root: RuleGroupData;
+  targets: Map<string, RuleGroupData>;
+}
+
+function cloneGroups(
+  root: RuleGroupData,
+  findGroupIds: string[]
+): ClonedGroups {
+  const foundGroups = new Map<string, RuleGroupData>();
+  const findGroupIdsSet = new Set(findGroupIds);
+
+  function recurse(current: RuleGroupData) {
+    const newRules = [...current.rules];
+
+    for (let i = 0; i < newRules.length; i++) {
+      const child = newRules[i];
+      // Skip normal rules
+      if (child.type !== 'group') continue;
+
+      newRules[i] = recurse(child);
+    }
+
+    const newGroup = {
+      ...current,
+      rules: newRules,
+    };
+
+    if (findGroupIdsSet.has(newGroup.id)) {
+      foundGroups.set(newGroup.id, newGroup);
+    }
+
+    return newGroup;
+  }
+
+  const newRoot = recurse(root);
+
+  return {
+    root: newRoot,
+    targets: foundGroups,
+  };
+}
+
 interface Props {
   initialGroup: RuleGroupData;
 }
@@ -60,19 +105,32 @@ interface Result {
   data: RuleGroupData;
 }
 
+function findGroup(rootGroup: RuleGroupData, targetId: string): RuleGroupData {
+  // "flat recursion"
+  let remaining: AnyRuleData[] = [rootGroup];
+
+  while (remaining.length) {
+    const currentGroup = remaining.shift()!;
+
+    if (currentGroup.type === 'rule') continue;
+    if (currentGroup.id === targetId) return currentGroup;
+
+    remaining = remaining.concat(currentGroup.rules);
+  }
+
+  throw new Error('group not found: ' + targetId);
+}
+
 function useRuleGroup({ initialGroup }: Props): Result {
   const [rootGroup, _setRootGroup] = useState(initialGroup);
   const [undoState, setUndoState] = useState<RuleGroupData | undefined>();
   const [redoState, setRedoState] = useState<RuleGroupData | undefined>();
 
   function setRootGroup(newRootGroup: RuleGroupData) {
-    console.info('>>> undo1', undoState, rootGroup, redoState);
     setUndoState(rootGroup);
     _setRootGroup(newRootGroup);
     setRedoState(undefined);
-    setTimeout(() => {
-      console.info('>>> undo2', rootGroup, newRootGroup, undefined);
-    }, 100);
+    setTimeout(() => {}, 100);
   }
 
   const newRuleIdRef = useRef<string | undefined>();
@@ -116,11 +174,32 @@ function useRuleGroup({ initialGroup }: Props): Result {
       }
     },
 
-    addRule(rule, toGroup) {
-      const cloned = cloneGroup(rootGroup, toGroup);
-      if (!cloned) return;
+    moveRule(rule, fromGroupId, toGroupId) {
+      const cloned = cloneGroups(rootGroup, [fromGroupId, toGroupId]);
 
-      console.info('>>> clone', cloned.root === rootGroup);
+      const fromGroup = cloned.targets.get(fromGroupId)!;
+      const toGroup = cloned.targets.get(toGroupId)!;
+
+      const i = fromGroup.rules.findIndex((cond) => cond.id === rule.id);
+      if (i === -1) return;
+      fromGroup.rules.splice(i, 1);
+
+      toGroup.rules.push(rule);
+
+      setRootGroup(cloned.root);
+    },
+
+    addRule(rule, toGroup) {
+      // let targetGroup: RuleGroupData | undefined;
+
+      // if (typeof toGroup === 'string') {
+      //   targetGroup = findGroup(rootGroup, toGroup);
+      // } else {
+      //   targetGroup = toGroup;
+      // }
+
+      const cloned = cloneOneGroup(rootGroup, toGroup);
+      if (!cloned) return;
 
       if (rule.type === 'group') {
         cloned.target.rules.push(rule);
@@ -143,14 +222,14 @@ function useRuleGroup({ initialGroup }: Props): Result {
     },
 
     setGroupOperator(group, op) {
-      const cloned = cloneGroup(rootGroup, group);
+      const cloned = cloneOneGroup(rootGroup, group);
       if (!cloned) return;
       cloned.target.groupOperator = op;
       setRootGroup(cloned.root);
     },
 
     removeRule(rule, fromGroup) {
-      const cloned = cloneGroup(rootGroup, fromGroup);
+      const cloned = cloneOneGroup(rootGroup, fromGroup);
       if (!cloned) return;
 
       const i = cloned.target.rules.findIndex((cond) => cond.id === rule.id);
