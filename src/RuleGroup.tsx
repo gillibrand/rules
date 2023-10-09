@@ -82,11 +82,11 @@ function RuleGroup({ group, parentGroup }: Props) {
   const [isAddHover, setIsAddHover] = useState(false);
 
   function addHover() {
-    setIsAddHover(true);
+    // setIsAddHover(true);
   }
 
   function removeHover() {
-    setIsAddHover(false);
+    // setIsAddHover(false);
   }
 
   function renderHeaderButtons(isRoot: boolean) {
