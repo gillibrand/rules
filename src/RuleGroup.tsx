@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { DragHandle } from './DragHandle';
 import { Rule } from './Rule';
 import { RuleContext } from './RuleController';
@@ -79,6 +79,16 @@ function RuleGroup({ group, parentGroup }: Props) {
   const shouldAnimateIn = controller.getNewRuleId() === group.id;
   useAnimateIn(shouldAnimateIn, ref, collapsedHeightPx);
 
+  const [isAddHover, setIsAddHover] = useState(false);
+
+  function addHover() {
+    setIsAddHover(true);
+  }
+
+  function removeHover() {
+    setIsAddHover(false);
+  }
+
   function renderHeaderButtons(isRoot: boolean) {
     if (isRoot) {
       return (
@@ -117,7 +127,12 @@ function RuleGroup({ group, parentGroup }: Props) {
   // animate. Nested RuleGroups need to be an an AnyRuleWrapper animation wrapper that also adds
   // guidelines.
   const ruleGroupEl = (
-    <div className={cx('RuleGroup', { 'RuleGroup--isRoot': !parentGroup })}>
+    <div
+      className={cx('RuleGroup', {
+        'RuleGroup--isRoot': !parentGroup,
+        'RuleGroup--isAddHover': isAddHover,
+      })}
+    >
       {/* Header with AND/OR select*/}
       <div className="RuleGroup__header">
         {parentGroup && <DragHandle className="negative1EndMargin" />}
@@ -162,12 +177,22 @@ function RuleGroup({ group, parentGroup }: Props) {
 
       {/* ADD buttons */}
       <div className="RuleGroup__controls">
-        <button className="ghostButton" onClick={onAddRule}>
+        <button
+          className="ghostButton"
+          onClick={onAddRule}
+          onMouseEnter={addHover}
+          onMouseLeave={removeHover}
+        >
           Add filter
           <i className="addIcon" />
         </button>
 
-        <button className="ghostButton" onClick={onAddGroup}>
+        <button
+          className="ghostButton"
+          onClick={onAddGroup}
+          onMouseEnter={addHover}
+          onMouseLeave={removeHover}
+        >
           Add group
           <i className="addGroupIcon" />
         </button>

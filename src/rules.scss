@@ -1,30 +1,25 @@
 .RuleGroup {
   display: flex;
   flex-direction: column;
+}
+
+.RuleGroup--isRoot {
+  // rules and group have top padding to separate them, but nothing on the outer sides and bottom
+  padding: 0 0.5rem 0.5rem 0.5rem;
+  overflow: auto;
   background-color: #f4f4f4;
-  // background-color: rgba(0, 0, 0, 0.1);
-  // padding: 0.5rem;
 }
 
 .RuleGroup__header {
   display: flex;
   gap: 1rem;
-  // justify-content: space-between;
-  // background-color: #cccccc;
 }
 
-// .RuleGroup .RuleGroup .RuleGroup__header {
-//   padding-inline-start: 2rem;
-// }
-
 .Rule,
-// .RuleGroup,
 .RuleGroup__header,
 .RuleGroup__controls,
 .RuleGroup__emptyMessage {
-  // padding: 0.25rem 000 0.25rem;
   padding-top: 0.5rem;
-  // font-size: 0.8rem;
 }
 
 // These create the blue guidelines. Top group does NOT have one next to it.
@@ -34,7 +29,6 @@
   // Blue guidelines are abs positioned under these.
   position: relative;
   // extra space for guidelines
-  // padding: 0.5rem 0.25rem 0 0.25rem;
   padding-inline-start: 4rem;
 
   &::before,
@@ -42,6 +36,8 @@
     content: '';
     position: absolute;
     background-color: #0043ce;
+
+    transition: box-shadow 100ms 200ms;
   }
 
   // vertical
@@ -72,17 +68,25 @@
       height: 1.5rem;
     }
   }
-}
 
-.RuleGroup > .RuleGroup {
-  &::after {
-    // height: 3px;
-    // background-color: black;
+  .RuleGroup.RuleGroup--isAddHover > & {
+    &::before,
+    &::after {
+      // background-color: red !important;
+      // box-shadow: 0 0 10px #0043ce;
+      // background-color: #0f62fe;
+
+      box-shadow: 0 0 10px #0f62fe;
+      // box-shadow: 0 0 10px #666;
+      // background-color: #0f62fe;
+      // width: 4px;
+      // box-shadow: -2px 0 0 1px #0043ce;
+    }
   }
 }
 
 .RuleGroup__controls {
-  padding-inline-start: 6rem !important;
+  // padding-inline-start: 6rem !important;
 }
 
 .hoverButton {
@@ -118,7 +122,7 @@ input[type='text'],
   border-bottom-color: rgb(141, 141, 141);
   padding: 0.5rem;
 
-  min-width: 15rem;
+  min-width: 10rem;
 }
 
 .icon {
@@ -211,14 +215,13 @@ input[type='text'],
   gap: 1em;
 }
 
-.RuleGroup__controls {
-  gap: 0.5rem;
-}
-
 .RuleGroup__emptyMessage {
   color: gray;
-  padding-inline-start: 5.5rem;
+  padding-inline-start: 4.5rem;
   min-height: 33px;
+  vertical-align: center;
+  display: flex;
+  align-items: center;
 
   // No horizontal line to empty groups rows. It looks cleaner w/o and and is more obviously empty
   &:after {
@@ -227,11 +230,7 @@ input[type='text'],
 }
 
 .RuleGroup__controls {
-  padding-inline-start: 5rem;
-}
-
-.RuleGroup--isRoot {
-  // rules and group have top padding to separate them, but nothing on the outer sides and bottom
-  padding: 0 0.5rem 0.5rem 0.5rem;
-  overflow: auto;
+  gap: 0.5rem;
+  padding-inline-start: 4.25rem;
+  // padding-inline-start: 6rem;
 }
