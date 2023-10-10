@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { RuleContext, RuleController } from './RuleController';
+import { RuleContext, RuleController, UiDropState } from './RuleController';
 import { RuleGroup } from './RuleGroup';
-import { AnyRuleData, RuleGroupData } from './types';
+import { getActiveAvatarNode } from './dnd/dragManager';
+import { RuleGroupData } from './types';
 
 interface Cloned {
   root: RuleGroupData;
@@ -105,20 +106,9 @@ interface Result {
   data: RuleGroupData;
 }
 
-function findGroup(rootGroup: RuleGroupData, targetId: string): RuleGroupData {
-  // "flat recursion"
-  let remaining: AnyRuleData[] = [rootGroup];
-
-  while (remaining.length) {
-    const currentGroup = remaining.shift()!;
-
-    if (currentGroup.type === 'rule') continue;
-    if (currentGroup.id === targetId) return currentGroup;
-
-    remaining = remaining.concat(currentGroup.rules);
-  }
-
-  throw new Error('group not found: ' + targetId);
+interface TransientState {
+  newRuleId: string | undefined;
+  dropState: UiDropState | undefined;
 }
 
 function useRuleGroup({ initialGroup }: Props): Result {
@@ -133,7 +123,10 @@ function useRuleGroup({ initialGroup }: Props): Result {
     setTimeout(() => {}, 100);
   }
 
-  const newRuleIdRef = useRef<string | undefined>();
+  const transientStateRef = useRef<TransientState>({
+    newRuleId: undefined,
+    dropState: undefined,
+  });
 
   const controller: RuleController = {
     canRedo() {
@@ -159,22 +152,26 @@ function useRuleGroup({ initialGroup }: Props): Result {
     },
 
     getNewRuleId() {
-      return newRuleIdRef.current;
+      return transientStateRef.current.newRuleId;
+    },
+
+    getDropState() {
+      return transientStateRef.current.dropState;
     },
 
     addNewRule(rule, toGroup) {
-      newRuleIdRef.current = rule.id;
+      transientStateRef.current.newRuleId = rule.id;
 
       try {
         this.addRule(rule, toGroup);
       } finally {
         setTimeout(() => {
-          newRuleIdRef.current = undefined;
+          transientStateRef.current.newRuleId = undefined;
         }, 0);
       }
     },
 
-    moveRule(rule, fromGroupId, toGroupId) {
+    moveRule(rule, fromGroupId, toGroupId, beforeRule) {
       const cloned = cloneGroups(rootGroup, [fromGroupId, toGroupId]);
 
       const fromGroup = cloned.targets.get(fromGroupId)!;
@@ -186,7 +183,27 @@ function useRuleGroup({ initialGroup }: Props): Result {
 
       toGroup.rules.push(rule);
 
-      setRootGroup(cloned.root);
+      const avatar = getActiveAvatarNode();
+
+      if (!avatar) {
+        // move NOT through DnD, so just update data
+        setRootGroup(cloned.root);
+        return;
+      }
+
+      // If DnD set more context data
+      transientStateRef.current.dropState = {
+        droppedRuleId: rule.id,
+        avatarRect: avatar.getBoundingClientRect(),
+      };
+
+      try {
+        setRootGroup(cloned.root);
+      } finally {
+        setTimeout(() => {
+          transientStateRef.current.dropState = undefined;
+        }, 0);
+      }
     },
 
     addRule(rule, toGroup) {

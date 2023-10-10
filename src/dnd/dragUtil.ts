@@ -14,8 +14,8 @@ function isEventWithin(e: MouseEvent, pos: Rect | DOMRect, vOffset?: number) {
   // Works with dojo.position or node.getBoundingClientRect
   const x = pos.x;
   const y = pos.y;
-  const w = 'w' in pos ? pos.w : pos.width;
-  const h = 'h' in pos ? pos.h : pos.height;
+  const w = 'w' in pos ? pos.width : pos.width;
+  const h = 'h' in pos ? pos.height : pos.height;
 
   if (e.clientX >= x && e.clientY >= y + vOffset) {
     const right = x + w;
@@ -31,8 +31,8 @@ function isEventWithin(e: MouseEvent, pos: Rect | DOMRect, vOffset?: number) {
 interface Rect {
   x: number;
   y: number;
-  w: number;
-  h: number;
+  width: number;
+  height: number;
 }
 
 export type { Rect };

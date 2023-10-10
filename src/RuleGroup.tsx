@@ -3,33 +3,32 @@ import React, { useContext, useEffect, useRef } from 'react';
 import { DragHandle } from './DragHandle';
 import { Rule } from './Rule';
 import { RuleContext, RuleController } from './RuleController';
-import { animateHeightOut } from './fx';
-import { generateGuid } from './guid';
-import './rules.scss';
-import {
-  EqualOperator,
-  GroupOperator,
-  RuleData,
-  RuleDragData,
-  RuleGroupData,
-} from './types';
-import { useAnimateIn } from './useAnimateIn';
 import {
   DragListener,
   addDragListener,
   removeDragListener,
 } from './dnd/dragManager';
 import { isEventWithin, type Rect } from './dnd/dragUtil';
+import { animateHeightOut } from './fx';
+import { generateGuid } from './guid';
+import './rules.scss';
+import {
+  EqualOperator,
+  GroupOperator,
+  RuleDragData,
+  RuleGroupData,
+} from './types';
+import { useAnimateIn } from './animateHooks';
 
 interface DropRegion {
   rect: Rect;
   relation: 'before' | 'after';
 
   parentGroupId: string;
-  ruleId: string;
+  targetRuleId: string;
 
   parentBodyNode: HTMLElement;
-  ruleNode: HTMLElement;
+  targetRuleNode: HTMLElement;
 }
 
 class DragCoordinator implements DragListener {
@@ -90,14 +89,14 @@ class DragCoordinator implements DragListener {
       const topRect = {
         x: rect.left,
         y: rect.top,
-        w: rect.width,
-        h: halfHeight,
+        width: rect.width,
+        height: halfHeight,
       };
       const bottomRect = {
         x: rect.left,
         y: rect.top + halfHeight,
-        w: rect.width,
-        h: halfHeight,
+        width: rect.width,
+        height: halfHeight,
       };
 
       // Each rule becomes two drop locations, for the top and bottom of it, since we might add
@@ -106,8 +105,8 @@ class DragCoordinator implements DragListener {
         rect: topRect,
         relation: 'before',
         parentGroupId,
-        ruleId: ruleNode.dataset.id!,
-        ruleNode,
+        targetRuleId: ruleNode.dataset.id!,
+        targetRuleNode: ruleNode,
         parentBodyNode,
       });
 
@@ -115,8 +114,8 @@ class DragCoordinator implements DragListener {
         rect: bottomRect,
         relation: 'after',
         parentGroupId,
-        ruleId: ruleNode.dataset.id!,
-        ruleNode,
+        targetRuleId: ruleNode.dataset.id!,
+        targetRuleNode: ruleNode,
         parentBodyNode,
       });
     }
@@ -142,7 +141,7 @@ class DragCoordinator implements DragListener {
     this.activeDropRegion = overDropRegion;
 
     showDropPlaceholder(
-      overDropRegion.ruleNode,
+      overDropRegion.targetRuleNode,
       overDropRegion.relation === 'before'
     );
 
@@ -157,6 +156,8 @@ class DragCoordinator implements DragListener {
     if (!this.activeDropRegion) return false;
 
     const controller = this.getController();
+
+    this.activeDropRegion.relation;
 
     controller.moveRule(
       dragged.rule,

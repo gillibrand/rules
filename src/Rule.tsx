@@ -3,7 +3,7 @@ import { DragHandle } from './DragHandle';
 import { RuleContext, RuleController } from './RuleController';
 import { animateHeightOut } from './fx';
 import { RuleData, RuleDragData, RuleGroupData } from './types';
-import { useAnimateIn } from './useAnimateIn';
+import { useAnimateDrop, useAnimateIn } from './animateHooks';
 import { startPossibleDrag } from './dnd/dragManager';
 
 interface Props {
@@ -23,13 +23,14 @@ function renderValue(value: unknown) {
 function Rule({ rule, parentGroup }: Props) {
   const { controller } = useContext(RuleContext);
 
-  const ref = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const ruleRef = useRef<HTMLDivElement>(null);
 
   const isFirstRule = parentGroup?.rules.length == 1;
 
   function onRemove() {
-    if (!ref || !ref.current) return;
-    const node = ref.current;
+    if (!wrapperRef || !wrapperRef.current) return;
+    const node = wrapperRef.current;
 
     if (isFirstRule) {
       controller.removeRule(rule, parentGroup);
@@ -41,15 +42,15 @@ function Rule({ rule, parentGroup }: Props) {
   }
 
   function onStartDrag(e: React.MouseEvent<HTMLElement>) {
-    if (!ref.current) return;
+    if (!wrapperRef.current) return;
 
     function avatarFactory() {
-      if (!ref.current) {
+      if (!wrapperRef.current) {
         throw new Error('cannot create drag avatar. Ref is missing.');
       }
 
       // XXX: assumes HTML structure. Maybe check classnames?
-      const wrapper = ref.current;
+      const wrapper = wrapperRef.current;
       const ruleNode = wrapper.firstElementChild!;
       const clone = wrapper.cloneNode(true) as HTMLElement;
 
@@ -66,20 +67,24 @@ function Rule({ rule, parentGroup }: Props) {
     const dragData: RuleDragData = {
       rule,
       parentGroup,
-      ruleNode: ref.current,
+      ruleNode: wrapperRef.current,
     };
+
     startPossibleDrag(e, 'RuleDragData', dragData, avatarFactory);
   }
 
   const shouldAnimateIn = controller.getNewRuleId() === rule.id && !isFirstRule;
-  // const fromHeightPx = isFirstRule ? 41 : undefined;
-  useAnimateIn(shouldAnimateIn, ref);
+  useAnimateIn(shouldAnimateIn, wrapperRef);
+
+  const dropState = controller.getDropState();
+  const shouldAnimateDrop = !!dropState && dropState.droppedRuleId === rule.id;
+  useAnimateDrop(shouldAnimateDrop, ruleRef, dropState?.avatarRect);
 
   //  Wrapper div is to animate without concern for padding. Inner Rule is the real thing with
   //  padding.
   return (
-    <div ref={ref} className="AnyRuleWrapper">
-      <div className="Rule" data-id={rule.id}>
+    <div ref={wrapperRef} className="AnyRuleWrapper">
+      <div ref={ruleRef} className="Rule" data-id={rule.id}>
         <DragHandle className="negative1EndMargin" onMouseDown={onStartDrag} />
 
         <select>

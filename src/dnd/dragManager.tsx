@@ -151,5 +151,15 @@ function cleanUp() {
   window.removeEventListener('mousemove', handleMove);
 }
 
-export { addDragListener, removeDragListener, startPossibleDrag };
+function getActiveAvatarNode() {
+  return avatar;
+}
+
+export {
+  addDragListener,
+  removeDragListener,
+  startPossibleDrag,
+  getActiveAvatarNode,
+};
+
 export type { DragListener };

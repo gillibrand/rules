@@ -36,6 +36,7 @@ interface RuleDragData {
   rule: AnyRuleData;
   ruleNode: HTMLElement;
   parentGroup: RuleGroupData;
+  beforeRule?: AnyRuleData;
 }
 
 export type {
