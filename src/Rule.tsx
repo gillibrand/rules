@@ -35,7 +35,7 @@ function Rule({ rule, parentGroup }: Props) {
     if (isFirstRule) {
       controller.removeRule(rule, parentGroup);
     } else {
-      animateHeightOut(node).finished.then(() => {
+      animateHeightOut(node).finished.finally(() => {
         controller.removeRule(rule, parentGroup);
       });
     }

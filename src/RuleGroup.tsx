@@ -22,13 +22,13 @@ import { useAnimateIn } from './animateHooks';
 
 interface DropRegion {
   rect: Rect;
-  relation: 'before' | 'after';
+  // relation: 'before' | 'after';
 
   parentGroupId: string;
-  targetRuleId: string;
+  beforeRuleId: string | undefined;
+  beforeRuleNode: HTMLElement | undefined;
 
   parentBodyNode: HTMLElement;
-  targetRuleNode: HTMLElement;
 }
 
 class DragCoordinator implements DragListener {
@@ -66,7 +66,9 @@ class DragCoordinator implements DragListener {
     // Immediately show a drop placeholder in it place in the table. Will move the placeholder on
     // drag.
     thing.ruleNode.style.display = 'none';
-    showDropPlaceholder(thing.ruleNode, true);
+    // XXX: aas
+    const groupBody = thing.ruleNode.closest('.RuleGroup__body') as HTMLElement;
+    showDropPlaceholder(groupBody, thing.ruleNode);
 
     this.dropRegions = [];
     const ruleNodes = domNode.querySelectorAll('.Rule');
@@ -88,36 +90,49 @@ class DragCoordinator implements DragListener {
       const halfHeight = Math.round(rect.height / 2);
       const topRect = {
         x: rect.left,
-        y: rect.top,
+        y: rect.top - halfHeight,
         width: rect.width,
-        height: halfHeight,
+        height: rect.height,
       };
-      const bottomRect = {
-        x: rect.left,
-        y: rect.top + halfHeight,
-        width: rect.width,
-        height: halfHeight,
-      };
+      // const bottomRect = {
+      //   x: rect.left,
+      //   y: rect.top + halfHeight,
+      //   width: rect.width,
+      //   height: halfHeight,
+      // };
 
       // Each rule becomes two drop locations, for the top and bottom of it, since we might add
       // before or after it.
       this.dropRegions.push({
         rect: topRect,
-        relation: 'before',
+        // relation: 'before',
         parentGroupId,
-        targetRuleId: ruleNode.dataset.id!,
-        targetRuleNode: ruleNode,
         parentBodyNode,
+        beforeRuleId: ruleNode.dataset.id!,
+        beforeRuleNode: ruleNode,
       });
 
-      this.dropRegions.push({
-        rect: bottomRect,
-        relation: 'after',
-        parentGroupId,
-        targetRuleId: ruleNode.dataset.id!,
-        targetRuleNode: ruleNode,
-        parentBodyNode,
-      });
+      if (i === ruleNodes.length - 1) {
+        const lastRect = { ...topRect, y: topRect.y + halfHeight };
+        console.info('>>> lastRect', lastRect);
+        this.dropRegions.push({
+          rect: lastRect,
+          // relation: 'before',
+          parentGroupId,
+          parentBodyNode,
+          beforeRuleId: undefined,
+          beforeRuleNode: undefined,
+        });
+      }
+
+      // this.dropRegions.push({
+      //   rect: bottomRect,
+      //   relation: 'after',
+      //   parentGroupId,
+      //   targetRuleId: ruleNode.dataset.id!,
+      //   targetRuleNode: ruleNode,
+      //   parentBodyNode,
+      // });
     }
 
     return true;
@@ -141,8 +156,8 @@ class DragCoordinator implements DragListener {
     this.activeDropRegion = overDropRegion;
 
     showDropPlaceholder(
-      overDropRegion.targetRuleNode,
-      overDropRegion.relation === 'before'
+      overDropRegion.parentBodyNode,
+      overDropRegion.beforeRuleNode
     );
 
     return true;
@@ -157,12 +172,13 @@ class DragCoordinator implements DragListener {
 
     const controller = this.getController();
 
-    this.activeDropRegion.relation;
+    // this.activeDropRegion.relation;
 
     controller.moveRule(
       dragged.rule,
       dragged.parentGroup.id,
-      this.activeDropRegion.parentGroupId
+      this.activeDropRegion.parentGroupId,
+      this.activeDropRegion.beforeRuleId
     );
 
     return true;
@@ -178,19 +194,22 @@ class DragCoordinator implements DragListener {
 // let dropbar: HTMLElement | null;
 let dropPlaceholder: HTMLElement | null;
 
-function showDropPlaceholder(ruleNode: HTMLElement, before: boolean) {
+function showDropPlaceholder(
+  groupBodyNode: HTMLElement,
+  beforeRuleNode?: HTMLElement
+) {
   if (!dropPlaceholder) {
     dropPlaceholder = document.createElement('div');
     dropPlaceholder.className = 'dropPlaceholder';
   }
 
-  const ruleWrapperNode = ruleNode.parentNode as HTMLElement;
-  const parentBodyNode = ruleWrapperNode.parentNode as HTMLElement;
-
-  parentBodyNode.insertBefore(
-    dropPlaceholder,
-    before ? ruleWrapperNode : ruleWrapperNode.nextElementSibling
-  );
+  if (!beforeRuleNode) {
+    groupBodyNode.insertBefore(dropPlaceholder, null);
+  } else {
+    // We actually insert before the wrapper, which fills the whole row.
+    const ruleWrapperNode = beforeRuleNode.closest('.AnyRuleWrapper');
+    groupBodyNode.insertBefore(dropPlaceholder, ruleWrapperNode);
+  }
 }
 
 function hideDropPlaceholder() {
@@ -304,7 +323,7 @@ function RuleGroup({ group, parentGroup }: Props) {
     if (!ref || !ref.current || !parentGroup) return;
     const node = ref.current;
 
-    animateHeightOut(node, collapsedHeightPx).finished.then(() => {
+    animateHeightOut(node, collapsedHeightPx).finished.finally(() => {
       controller.removeRule(group, parentGroup);
     });
   }

@@ -171,19 +171,35 @@ function useRuleGroup({ initialGroup }: Props): Result {
       }
     },
 
-    moveRule(rule, fromGroupId, toGroupId, beforeRule) {
+    moveRule(rule, fromGroupId, toGroupId, beforeRuleId) {
       const cloned = cloneGroups(rootGroup, [fromGroupId, toGroupId]);
 
+      console.info('>>> rule', rule);
+      console.info('>>> beforeRuleId', beforeRuleId);
+      console.info('>>> fromGroupId', fromGroupId);
+      console.info('>>> toGroupId', toGroupId);
       const fromGroup = cloned.targets.get(fromGroupId)!;
       const toGroup = cloned.targets.get(toGroupId)!;
+      console.info('>>> eq', fromGroup === toGroup);
 
-      const i = fromGroup.rules.findIndex((cond) => cond.id === rule.id);
+      const i = fromGroup.rules.findIndex((current) => current.id === rule.id);
       if (i === -1) return;
+      console.info('>>> remove', i);
       fromGroup.rules.splice(i, 1);
 
-      toGroup.rules.push(rule);
+      if (!beforeRuleId) {
+        toGroup.rules.push(rule);
+      } else {
+        const i = toGroup.rules.findIndex(
+          (current) => current.id === beforeRuleId
+        );
+        toGroup.rules.splice(i, 0, rule);
+      }
+      console.info('>>> after from', fromGroup);
+      console.info('>>> after   to', toGroup);
 
       const avatar = getActiveAvatarNode();
+      console.info('>>> eq', fromGroup === toGroup);
 
       if (!avatar) {
         // move NOT through DnD, so just update data

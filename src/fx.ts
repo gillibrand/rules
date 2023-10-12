@@ -20,7 +20,7 @@ function animateHeightIn(domNode: HTMLElement, fromHeightPx?: number) {
     { duration: 200, easing: 'ease' }
   );
 
-  anim.finished.then(() => {
+  anim.finished.finally(() => {
     domNode.style.overflow = '';
   });
 
@@ -38,7 +38,7 @@ function animateHeightOut(domNode: HTMLElement, toHeightPx?: number) {
     { duration: 200, easing: 'ease' }
   );
 
-  anim.finished.then(() => {
+  anim.finished.finally(() => {
     domNode.style.height = end;
   });
 

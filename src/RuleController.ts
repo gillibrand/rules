@@ -23,7 +23,7 @@ interface RuleController {
     rule: AnyRuleData,
     fromGroupId: string,
     toGroupId: string,
-    beforeRule: AnyRuleData
+    beforeRuleId?: string
   ): void;
 
   /**

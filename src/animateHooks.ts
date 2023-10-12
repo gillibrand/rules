@@ -40,7 +40,7 @@ function useAnimateDrop(
       { duration: 150, easing: 'ease' }
     );
 
-    anim.finished.then(() => {
+    anim.finished.finally(() => {
       node.style.transform = '';
     });
 
