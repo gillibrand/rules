@@ -21,14 +21,14 @@ import {
 import { useAnimateIn } from './animateHooks';
 
 interface DropRegion {
-  rect: Rect;
-  // relation: 'before' | 'after';
+  bounds: Rect;
+  relation: 'before' | 'after';
 
-  parentGroupId: string;
-  beforeRuleId: string | undefined;
-  beforeRuleNode: HTMLElement | undefined;
+  targetGroupId: string;
+  targetGroupBodyNode: HTMLElement;
 
-  parentBodyNode: HTMLElement;
+  targetAnyRuleId?: string;
+  targetAnyRuleNode?: HTMLElement;
 }
 
 class DragCoordinator implements DragListener {
@@ -66,73 +66,63 @@ class DragCoordinator implements DragListener {
     // Immediately show a drop placeholder in it place in the table. Will move the placeholder on
     // drag.
     thing.ruleNode.style.display = 'none';
-    // XXX: aas
     const groupBody = thing.ruleNode.closest('.RuleGroup__body') as HTMLElement;
-    showDropPlaceholder(groupBody, thing.ruleNode);
+    showDropPlaceholder(groupBody, thing.ruleNode, 'after');
 
     this.dropRegions = [];
     const ruleNodes = domNode.querySelectorAll('.Rule');
 
     for (let i = 0; i < ruleNodes.length; i++) {
       const ruleNode = ruleNodes[i] as HTMLElement;
-      const parentBodyNode = ruleNode.closest(
+
+      const targetGroupBodyNode = ruleNode.closest(
         '.RuleGroup__body'
       ) as HTMLElement;
-      console.assert(!!parentBodyNode);
+      console.assert(!!targetGroupBodyNode);
 
-      const parentGroupNode = parentBodyNode.closest(
+      const parentGroupNode = targetGroupBodyNode.closest(
         '.RuleGroup'
       ) as HTMLElement;
       console.assert(!!parentGroupNode);
-      const parentGroupId = parentGroupNode.dataset.id!;
+      const targetGroupId = parentGroupNode.dataset.id!;
 
       const rect = ruleNode.getBoundingClientRect();
       const halfHeight = Math.round(rect.height / 2);
       const topRect = {
         x: rect.left,
-        y: rect.top - halfHeight,
+        y: rect.top,
         width: rect.width,
-        height: rect.height,
+        height: halfHeight,
       };
-      // const bottomRect = {
-      //   x: rect.left,
-      //   y: rect.top + halfHeight,
-      //   width: rect.width,
-      //   height: halfHeight,
-      // };
+      const bottomRect = {
+        x: rect.left,
+        y: rect.top + halfHeight,
+        width: rect.width,
+        height: halfHeight,
+      };
+
+      // redBox(topRect, 1000);
+      // redBox(bottomRect, 1000, 'green');
 
       // Each rule becomes two drop locations, for the top and bottom of it, since we might add
       // before or after it.
       this.dropRegions.push({
-        rect: topRect,
-        // relation: 'before',
-        parentGroupId,
-        parentBodyNode,
-        beforeRuleId: ruleNode.dataset.id!,
-        beforeRuleNode: ruleNode,
+        bounds: topRect,
+        relation: 'before',
+        targetGroupId,
+        targetGroupBodyNode,
+        targetAnyRuleId: ruleNode.dataset.id!,
+        targetAnyRuleNode: ruleNode,
       });
 
-      if (i === ruleNodes.length - 1) {
-        const lastRect = { ...topRect, y: topRect.y + halfHeight };
-        console.info('>>> lastRect', lastRect);
-        this.dropRegions.push({
-          rect: lastRect,
-          // relation: 'before',
-          parentGroupId,
-          parentBodyNode,
-          beforeRuleId: undefined,
-          beforeRuleNode: undefined,
-        });
-      }
-
-      // this.dropRegions.push({
-      //   rect: bottomRect,
-      //   relation: 'after',
-      //   parentGroupId,
-      //   targetRuleId: ruleNode.dataset.id!,
-      //   targetRuleNode: ruleNode,
-      //   parentBodyNode,
-      // });
+      this.dropRegions.push({
+        bounds: bottomRect,
+        relation: 'after',
+        targetGroupId,
+        targetGroupBodyNode,
+        targetAnyRuleId: ruleNode.dataset.id!,
+        targetAnyRuleNode: ruleNode,
+      });
     }
 
     return true;
@@ -143,7 +133,7 @@ class DragCoordinator implements DragListener {
 
     for (let i = 0; i < this.dropRegions.length; i++) {
       const region = this.dropRegions[i];
-      if (isEventWithin(e, region.rect)) {
+      if (isEventWithin(e, region.bounds)) {
         overDropRegion = region;
         break;
       }
@@ -156,8 +146,9 @@ class DragCoordinator implements DragListener {
     this.activeDropRegion = overDropRegion;
 
     showDropPlaceholder(
-      overDropRegion.parentBodyNode,
-      overDropRegion.beforeRuleNode
+      overDropRegion.targetGroupBodyNode,
+      overDropRegion.targetAnyRuleNode,
+      overDropRegion.relation
     );
 
     return true;
@@ -177,8 +168,9 @@ class DragCoordinator implements DragListener {
     controller.moveRule(
       dragged.rule,
       dragged.parentGroup.id,
-      this.activeDropRegion.parentGroupId,
-      this.activeDropRegion.beforeRuleId
+      this.activeDropRegion.targetGroupId,
+      this.activeDropRegion.targetAnyRuleId,
+      this.activeDropRegion.relation
     );
 
     return true;
@@ -196,19 +188,22 @@ let dropPlaceholder: HTMLElement | null;
 
 function showDropPlaceholder(
   groupBodyNode: HTMLElement,
-  beforeRuleNode?: HTMLElement
+  aroundAnyRuleNode?: HTMLElement,
+  relation?: 'before' | 'after'
 ) {
   if (!dropPlaceholder) {
     dropPlaceholder = document.createElement('div');
     dropPlaceholder.className = 'dropPlaceholder';
   }
 
-  if (!beforeRuleNode) {
-    groupBodyNode.insertBefore(dropPlaceholder, null);
+  if (!aroundAnyRuleNode) {
+    groupBodyNode.appendChild(dropPlaceholder);
   } else {
     // We actually insert before the wrapper, which fills the whole row.
-    const ruleWrapperNode = beforeRuleNode.closest('.AnyRuleWrapper');
-    groupBodyNode.insertBefore(dropPlaceholder, ruleWrapperNode);
+    const wrapperNode = aroundAnyRuleNode.closest('.AnyRuleWrapper')!;
+    const beforeNode =
+      relation === 'before' ? wrapperNode : wrapperNode.nextElementSibling;
+    groupBodyNode.insertBefore(dropPlaceholder, beforeNode);
   }
 }
 
@@ -246,6 +241,37 @@ function hideDropPlaceholder() {
 //   dropbar.parentNode?.removeChild(dropbar);
 //   dropbar = null;
 // }
+
+function redBox(
+  rect: Rect | DOMRect,
+  optionalExpiryMillis?: number,
+  color?: string
+) {
+  // return;
+  // var box = dojo.create('div', null, document.body);
+  const box = document.createElement('div');
+  document.body.appendChild(box);
+
+  Object.assign(box.style, {
+    position: 'absolute',
+    top: rect.y + 'px',
+    left: rect.x + 'px',
+    height: rect.height + 'px',
+    width: rect.width + 'px',
+    border: 'solid 1px',
+    borderColor: color || 'red',
+    zIndex: '1000',
+    pointerEvents: 'none',
+  });
+
+  if (optionalExpiryMillis && optionalExpiryMillis > 0) {
+    setTimeout(function () {
+      box.parentNode?.removeChild(box);
+    }, optionalExpiryMillis);
+  }
+
+  return box;
+}
 
 interface Props {
   parentGroup?: RuleGroupData;
@@ -395,7 +421,11 @@ function RuleGroup({ group, parentGroup }: Props) {
       {/* Header with AND/OR select*/}
       <div className="RuleGroup__header">
         {parentGroup && (
-          <DragHandle className="negative1EndMargin" onMouseDown={() => {}} />
+          <DragHandle
+            className="negative1EndMargin"
+            onMouseDown={() => {}}
+            style={{ visibility: 'hidden' }}
+          />
         )}
 
         <div>
@@ -414,15 +444,21 @@ function RuleGroup({ group, parentGroup }: Props) {
 
       {/* Rules in this group (can be subgroups) */}
       <div className="RuleGroup__body">
-        {group.rules.map((rule) =>
+        {group.rules.map((rule, i) =>
           rule.type === 'group' ? (
-            <RuleGroup key={rule.id} group={rule} parentGroup={group} />
+            <RuleGroup
+              key={rule.id}
+              group={rule}
+              parentGroup={group}
+              data-index={i}
+            />
           ) : (
             <Rule
               key={rule.id}
               rule={rule}
               parentGroup={group}
               controller={controller}
+              data-index={i}
             />
           )
         )}
@@ -474,4 +510,4 @@ function RuleGroup({ group, parentGroup }: Props) {
   }
 }
 
-export { RuleGroup };
+export { RuleGroup, redBox };

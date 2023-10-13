@@ -23,7 +23,8 @@ interface RuleController {
     rule: AnyRuleData,
     fromGroupId: string,
     toGroupId: string,
-    beforeRuleId?: string
+    targetRuleId?: string,
+    relation?: 'before' | 'after'
   ): void;
 
   /**
